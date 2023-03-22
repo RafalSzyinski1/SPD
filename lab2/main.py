@@ -50,11 +50,14 @@ def Schrage(J):
     return pi
 
 
-def SchragePmtn(Z):
+def SchragePmtnAndEval(Z):
     G = []
     N = Z[:]
     N.sort(key=lambda x: x.r)
     t = N[0].r
+
+    Cmax = N[0].r + N[0].p + N[0].q
+
     pi = []
     while len(G) != 0 or len(N) != 0:
         while len(N) != 0 and N[0].r <= t:
@@ -69,14 +72,15 @@ def SchragePmtn(Z):
                     last.p = last.p - (element.r - last.r)
                     pi.pop()
                     heappush(G, last)
+                else:
+                    Cmax = max(Cmax, t + element.q)
             t = t + element.p
             pi.append(element)
         else:
             t = N[0].r
-        print("G", G)
-        print("pi", pi)
-        print("t=", t)
-    return [x.i for x in pi]
+
+    print([x.i for x in pi])
+    return Cmax
 
 
 def Carlier(J):
@@ -93,6 +97,5 @@ if __name__ == "__main__":
         x.r = rng.nextInt(1, A)
     for x in Z:
         x.q = rng.nextInt(1, X)
-    pprint(Z)
-
-    print(SchragePmtn(Z))
+    print(Z)
+    print(SchragePmtnAndEval(Z))
