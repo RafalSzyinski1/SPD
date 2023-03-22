@@ -1,7 +1,7 @@
 from RandomNumberGenerator import RandomNumberGenerator
 from pprint import pprint
 import numpy as np
-from heapq import heapify, heappop, heappush
+from heapq import heappop, heappush
 
 
 class Task:
@@ -50,13 +50,42 @@ def Schrage(J):
     return pi
 
 
+def SchragePmtn(Z):
+    G = []
+    N = Z[:]
+    N.sort(key=lambda x: x.r)
+    t = N[0].r
+    pi = []
+    while len(G) != 0 or len(N) != 0:
+        while len(N) != 0 and N[0].r <= t:
+            heappush(G, N[0])
+            N.pop(0)
+        if len(G) != 0:
+            element = heappop(G)
+            if len(pi) != 0:
+                last = pi[-1]
+                if last.q < element.q:
+                    t = t + (element.r - last.r) - last.p
+                    last.p = last.p - (element.r - last.r)
+                    pi.pop()
+                    heappush(G, last)
+            t = t + element.p
+            pi.append(element)
+        else:
+            t = N[0].r
+        print("G", G)
+        print("pi", pi)
+        print("t=", t)
+    return [x.i for x in pi]
+
+
 def Carlier(J):
     pass
 
 
 if __name__ == "__main__":
     n = 10
-    rng = RandomNumberGenerator(1)
+    rng = RandomNumberGenerator(7523)
     Z = [Task(0, rng.nextInt(1, 29), 0, i) for i in range(n)]
     A = sum(x.p for x in Z)
     X = A
@@ -65,21 +94,5 @@ if __name__ == "__main__":
     for x in Z:
         x.q = rng.nextInt(1, X)
     pprint(Z)
-    print(eval(Z))
-    a = Schrage(Z)
-    pprint(a)
-    print(eval(a))
 
-
-class Test:
-    def test1(self):
-        n = 10
-        rng = RandomNumberGenerator(1)
-        Z = [Task(0, rng.nextInt(1, 29), 0) for _ in range(10)]
-        A = sum(x.p for x in Z)
-        X = 29
-        for x in Z:
-            x.r = rng.nextInt(1, A)
-            x.q = rng.nextInt(1, X)
-        pprint(Z)
-        print(eval(Z))
+    print(SchragePmtn(Z))
