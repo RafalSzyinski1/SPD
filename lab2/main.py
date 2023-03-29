@@ -26,9 +26,9 @@ def eval(pi):
     C = [S[0] + pi[0].p]
     Cmax = C[0] + pi[0].q
     for i in pi[1:]:
-        S.append(max(i.r, C[-1]))
+        S.append(max([i.r, C[-1]]))
         C.append(S[-1] + i.p)
-        Cmax = max(Cmax, C[-1] + i.q)
+        Cmax = max([Cmax, C[-1] + i.q])
     return Cmax
 
 
@@ -47,7 +47,7 @@ def evalC(pi):
 
 def Schrage(J):
     G = []
-    N = J[:]
+    N = copy.deepcopy(J)
     N.sort(key=lambda x: x.r)
     t = N[0].r
     pi = []
@@ -66,7 +66,7 @@ def Schrage(J):
 
 def SchragePmtnAndEval(Z):
     G = []
-    N = Z[:]
+    N = copy.deepcopy(Z)
     N.sort(key=lambda x: x.r)
     t = N[0].r
 
@@ -106,8 +106,8 @@ def Carlier(J, bpi=[], LB=0, UB=100000000000):
     C = evalC(pi)
     piC = zip(pi, C)
     b = np.argmax([x[1] + x[0].q for x in piC])
-    a = np.argmin([pi[j].r + sum([x.p for x in pi[j:b]])
-                  for j in range(0, b)])
+    a = np.argmin([pi[j].r + sum([x.p for x in pi[j:b+1]]) + pi[b].q
+                  for j in range(0, b+1)])
     c = -1
     max_q = -1
     for j in range(a, b):
@@ -116,7 +116,7 @@ def Carlier(J, bpi=[], LB=0, UB=100000000000):
             max_q = pi[j].q
     if c == -1:
         return bpi
-    K = range(c, b + 1)
+    K = range(c+1, b+1)
     br = min([pi[j].r for j in K])
     bq = min([pi[j].q for j in K])
     bp = sum([pi[j].p for j in K])
@@ -124,20 +124,20 @@ def Carlier(J, bpi=[], LB=0, UB=100000000000):
     temp_r = pi[c].r
     pi[c].r = max([pi[c].r, br + bp])
 
-    LB = SchragePmtnAndEval(pi[:])
+    LB = SchragePmtnAndEval(pi)
 
     if LB < UB:
-        Carlier(pi, bpi, LB, UB)
+        bpi = Carlier(pi, bpi, LB, UB)
 
     pi[c].r = temp_r
 
     temp_q = pi[c].q
-    pi[c].q = max([pi[c].q, bq + bp])
+    pi[c].q = min([pi[c].q, bq + bp])
 
-    LB = SchragePmtnAndEval(pi[:])
+    LB = SchragePmtnAndEval(pi)
 
     if LB < UB:
-        Carlier(pi, bpi, LB, UB)
+        bpi = Carlier(pi, bpi, LB, UB)
 
     pi[c].q = temp_q
     return bpi
@@ -153,11 +153,9 @@ if __name__ == "__main__":
         x.r = rng.nextInt(1, A)
     for x in Z:
         x.q = rng.nextInt(1, X)
+
     pprint(Z)
-    a = [5, 1, 2, 7, 6, 8, 3, 10, 4, 9, 0, 11]
-    pprint(evalC([Z[i] for i in a]))
-    print(eval([Z[i] for i in a]))
+    print(eval(Z))
     b = Carlier(Z)
     pprint(b)
-
-    print(eval(Z))
+    pprint(eval(b))
