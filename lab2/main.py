@@ -2,6 +2,7 @@ from RandomNumberGenerator import RandomNumberGenerator
 from pprint import pprint
 import numpy as np
 from heapq import heappop, heappush
+import copy
 
 
 class Task:
@@ -31,6 +32,19 @@ def eval(pi):
     return Cmax
 
 
+def evalC(pi):
+    if len(pi) < 2:
+        raise Exception("eval: error")
+    S = [pi[0].r]
+    C = [S[0] + pi[0].p]
+    Cmax = C[0] + pi[0].q
+    for i in pi[1:]:
+        S.append(max(i.r, C[-1]))
+        C.append(S[-1] + i.p)
+        Cmax = max(Cmax, C[-1] + i.q)
+    return C
+
+
 def Schrage(J):
     G = []
     N = J[:]
@@ -46,7 +60,7 @@ def Schrage(J):
             pi.append(element)
             t = t + element.p
         else:
-            t = N[0]
+            t = N[0].r
     return pi
 
 
@@ -79,17 +93,59 @@ def SchragePmtnAndEval(Z):
         else:
             t = N[0].r
 
-    print([x.i for x in pi])
     return Cmax
 
 
-def Carlier(J):
-    pass
+def Carlier(J, bpi=[], LB=0, UB=100000000000):
+    pi = Schrage(J)
+    U = eval(pi)
+    if U < UB:
+        UB = U
+        bpi = copy.deepcopy(pi)
+
+    C = evalC(pi)
+    piC = zip(pi, C)
+    b = np.argmax([x[1] + x[0].q for x in piC])
+    a = np.argmin([pi[j].r + sum([x.p for x in pi[j:b]])
+                  for j in range(0, b)])
+    c = -1
+    max_q = -1
+    for j in range(a, b):
+        if pi[j].q < pi[b].q and pi[j].q > max_q:
+            c = j
+            max_q = pi[j].q
+    if c == -1:
+        return bpi
+    K = range(c, b + 1)
+    br = min([pi[j].r for j in K])
+    bq = min([pi[j].q for j in K])
+    bp = sum([pi[j].p for j in K])
+
+    temp_r = pi[c].r
+    pi[c].r = max([pi[c].r, br + bp])
+
+    LB = SchragePmtnAndEval(pi[:])
+
+    if LB < UB:
+        Carlier(pi, bpi, LB, UB)
+
+    pi[c].r = temp_r
+
+    temp_q = pi[c].q
+    pi[c].q = max([pi[c].q, bq + bp])
+
+    LB = SchragePmtnAndEval(pi[:])
+
+    if LB < UB:
+        Carlier(pi, bpi, LB, UB)
+
+    pi[c].q = temp_q
+    return bpi
 
 
 if __name__ == "__main__":
-    n = 10
-    rng = RandomNumberGenerator(7523)
+    n = 12
+    rng = RandomNumberGenerator(1)
     Z = [Task(0, rng.nextInt(1, 29), 0, i) for i in range(n)]
     A = sum(x.p for x in Z)
     X = A
@@ -97,5 +153,11 @@ if __name__ == "__main__":
         x.r = rng.nextInt(1, A)
     for x in Z:
         x.q = rng.nextInt(1, X)
-    print(Z)
-    print(SchragePmtnAndEval(Z))
+    pprint(Z)
+    a = [5, 1, 2, 7, 6, 8, 3, 10, 4, 9, 0, 11]
+    pprint(evalC([Z[i] for i in a]))
+    print(eval([Z[i] for i in a]))
+    b = Carlier(Z)
+    pprint(b)
+
+    print(eval(Z))
