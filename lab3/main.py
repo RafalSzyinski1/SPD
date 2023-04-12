@@ -2,6 +2,7 @@ import numpy as np
 import copy
 from RandomNumberGenerator import RandomNumberGenerator
 from pprint import pprint
+import itertools
 
 
 def eval(p, pi):
@@ -61,14 +62,68 @@ def Johnson(p):
     return pi
 
 
-def init(m, n):
-    rng = RandomNumberGenerator(1)
+def brute_force(p):
+    Cmax = 10000000000
+    pi = [x for x in range(len(p))]
+    best_pi = pi[:]
+    for per in itertools.permutations(pi):
+        _, C = eval(p, per)
+        if Cmax > C[-1][-1]:
+            Cmax = C[-1][-1]
+            best_pi = per[:]
+    return best_pi
+
+
+def Bound0(pi, N, p):
+    return eval(p, pi)[-1][-1][-1] + sum([p[i][-1] for i in N])
+
+
+def Bound1(pi, N, p):
+    return max([eval(p, pi)[-1][-1][m] + sum([p[i][m] for i in N]) for m in range(len(p[0]))])
+
+
+def BnBp(p, j, N, pi, best_pi, LB, UB):
+
+    pi.append(j)
+    N.remove(j)
+
+    # print("j", j, "N", N, "pi", pi, "LB", LB, "UB", UB)
+
+    if len(N) != 0:
+        LB = Bound1(pi, N, p)
+        if LB < UB[0]:
+            for i in N:
+                BnBp(p, i, N[:], pi[:], best_pi, LB, UB)
+    else:
+        Cmax = eval(p, pi)[-1][-1][-1]
+        if Cmax < UB[0]:
+            UB[0] = Cmax
+            for i in range(len(pi)):
+                best_pi[i] = pi[i]
+
+
+def BnB(p):
+    bestbest_pi = []
+    Cmax = 10000000
+    N = [i for i in range(len(p))]
+    for i in N:
+        best_pi = [0 for _ in range(len(p))]
+        UB = [400]
+        BnBp(p, i, N[:], [], best_pi, 10000000, UB)
+        if UB[0] < Cmax:
+            bestbest_pi = best_pi[:]
+            Cmax = UB[0]
+    return bestbest_pi
+
+
+def init(m, n, seed=1):
+    rng = RandomNumberGenerator(seed)
     return [[rng.nextInt(1, 29) for _ in range(m)] for _ in range(n)]
 
 
 def main():
     # p = [[4, 1], [4, 3], [1, 2], [5, 1]]
-    p = init(2, 12)
+    p = init(2, 20, 2)
     pprint(p)
     k = Johnson(p)
     print("pi", k)
@@ -78,5 +133,33 @@ def main():
     print("Cmax", C[-1][-1])
 
 
+def main2():
+    p = init(3, 10, 2)
+    pprint(p)
+    k = brute_force(p)
+    print("pi", k)
+    S, C = eval(p, k)
+    print("S", S)
+    print("C", C)
+    print("Cmax", C[-1][-1])
+
+
+def main3():
+    p = init(2, 5, 2)
+    pprint(p)
+    print(Bound1([0, 1, 2], [3, 4], p))
+
+
+def main4():
+    p = init(3, 10, 2)
+    pprint(p)
+    k = BnB(p)
+    print("pi", k)
+    S, C = eval(p, k)
+    print("S", S)
+    print("C", C)
+    print("Cmax", C[-1][-1])
+
+
 if __name__ == '__main__':
-    main()
+    main3()
