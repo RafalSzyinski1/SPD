@@ -3,6 +3,7 @@ import copy
 from RandomNumberGenerator import RandomNumberGenerator
 from pprint import pprint
 import itertools
+import time
 
 
 def eval(p, pi):
@@ -62,6 +63,17 @@ def Johnson(p):
     return pi
 
 
+def JohnsonM(p):
+    m = len(p[0])
+    new_p = copy.deepcopy(p)
+    for i in range(m-2):
+        for j in range(len(new_p)):
+            val = new_p[j]
+            new_p[j] = [val[0] + val[1], val[1] + val[2], *val[3:]]
+
+    return Johnson(new_p)
+
+
 def brute_force(p):
     Cmax = 10000000000
     pi = [x for x in range(len(p))]
@@ -80,6 +92,10 @@ def Bound0(pi, N, p):
 
 def Bound1(pi, N, p):
     return max([eval(p, pi)[-1][-1][m] + sum([p[i][m] for i in N]) for m in range(len(p[0]))])
+
+
+# def Bound2(pi, N, p):
+#    return max([eval(p, pi)[-1][-1][i] + sum([p[i][j] for j in N]) + sum([min([p[k][j] for j in N]) for k in range(i, len(p[0]))]) for i in range(len(p[0]))])
 
 
 def BnBp(p, j, N, pi, best_pi, LB, UB):
@@ -134,7 +150,7 @@ def main():
 
 
 def main2():
-    p = init(3, 10, 2)
+    p = init(5, 9, 2)
     pprint(p)
     k = brute_force(p)
     print("pi", k)
@@ -151,7 +167,7 @@ def main3():
 
 
 def main4():
-    p = init(3, 10, 2)
+    p = init(5, 9, 2)
     pprint(p)
     k = BnB(p)
     print("pi", k)
@@ -161,5 +177,20 @@ def main4():
     print("Cmax", C[-1][-1])
 
 
+def main5():
+    p = init(5, 10, 2)
+    pprint(p)
+    k = JohnsonM(p)
+    print("pi", k)
+    S, C = eval(p, k)
+    print("S", S)
+    print("C", C)
+    print("Cmax", C[-1][-1])
+
+
 if __name__ == '__main__':
-    main3()
+    print("BnB")
+    start = time.time()
+    main4()
+    end = time.time()
+    print(end - start)
