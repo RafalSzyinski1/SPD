@@ -43,6 +43,7 @@ def sump(D, p):
         counter += 1
     return sum
 
+
 def PD(p):
     size = 2**len(p)
     mem = [0 for _ in range(size)]
@@ -55,10 +56,10 @@ def PD(p):
             bit = D & 1
             D = D >> 1
             if bit == 1:
-                temp.append(max([sumpj - p[counter][2], 0]) * p[counter][1] + mem[x - counter])
+                temp.append(max([sumpj - p[counter][2], 0]) * p[counter][1] + mem[x & ~(1 << counter)])
             counter += 1
         mem[x] = min(temp)
-    return mem
+    return mem[-1]
 
 def init(j, seed=1, sumx=True):
     rng = RandomNumberGenerator(seed)
@@ -92,7 +93,7 @@ def main2():
 def main3():
     p = init(5)
     pprint(p)
-    print(sump(6, p))
+    print(PD(p))
 
 if __name__ == '__main__':
     main3()
